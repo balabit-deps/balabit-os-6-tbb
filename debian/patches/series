@@ -1,0 +1,9 @@
+adddebug.patch
+fixnonlinux.patch
+failonbadtests.patch
+buildi386.patch
+linuxreleasedetect.patch
+tally-unit-test-fails.patch
+atomic-rework.patch
+gcc-atomic-detection.patch
+gcc-atomic-always.patch

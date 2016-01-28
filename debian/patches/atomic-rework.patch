@@ -1,0 +1,32 @@
+Description: Use gcc __atomic instead of __sync
+Author: Original author Mathieu Malaterre <malat@debian.org>
+        Promoted to gcc_generic.h and extended by Steve Capper <steven.capper@gmail.com>
+
+Index: b/include/tbb/machine/gcc_generic.h
+===================================================================
+--- a/include/tbb/machine/gcc_generic.h
++++ b/include/tbb/machine/gcc_generic.h
+@@ -58,14 +58,18 @@
+     fence usages where a more lightweight synchronization means (or none at all)
+     could suffice. Thus if you use this header to enable TBB on a new platform,
+     consider forking it and relaxing below helpers as appropriate. **/
+-#define __TBB_acquire_consistency_helper()  __sync_synchronize()
+-#define __TBB_release_consistency_helper()  __sync_synchronize()
+-#define __TBB_full_memory_fence()           __sync_synchronize()
+-#define __TBB_control_consistency_helper()  __sync_synchronize()
++#define __TBB_acquire_consistency_helper()  __atomic_thread_fence(__ATOMIC_SEQ_CST)
++#define __TBB_release_consistency_helper()  __atomic_thread_fence(__ATOMIC_SEQ_CST)
++#define __TBB_full_memory_fence()           __atomic_thread_fence(__ATOMIC_SEQ_CST)
++#define __TBB_control_consistency_helper()  __atomic_thread_fence(__ATOMIC_SEQ_CST)
+ 
+ #define __TBB_MACHINE_DEFINE_ATOMICS(S,T)                                                         \
+ inline T __TBB_machine_cmpswp##S( volatile void *ptr, T value, T comparand ) {                    \
+-    return __sync_val_compare_and_swap(reinterpret_cast<volatile T *>(ptr),comparand,value);      \
++    T retval = comparand;                                                                         \
++    if (__atomic_compare_exchange_n(reinterpret_cast<volatile T *>(ptr), &retval, value,          \
++                                        false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))               \
++        return retval;                                                                            \
++   return retval;                                                                                 \
+ }                                                                                                 \
+ inline T __TBB_machine_fetchadd##S( volatile void *ptr, T value ) {                               \
+     return __sync_fetch_and_add(reinterpret_cast<volatile T *>(ptr),value);                       \

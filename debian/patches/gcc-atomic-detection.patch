@@ -1,0 +1,17 @@
+Description: Fix the gcc atomic detection to work for
+  gcc-5.x and up, as well as adding -latomic to LIBS
+Author: Adam Conrad <adconrad@ubuntu.com>
+Bug-Debian: https://bugs.debian.org/787084
+Last-Update: 2015-08-11
+
+--- tbb-4.3~20150611.orig/build/linux.gcc.inc
++++ tbb-4.3~20150611/build/linux.gcc.inc
+@@ -51,6 +51,8 @@
+ # gcc 4.8 and later support RTM intrinsics, but require command line switch to enable them
+ ifneq (,$(shell gcc -dumpversion | egrep  "^(4\.[8-9]|[5-9])"))
+     RTM_KEY = -mrtm
++    # furthermore, on gcc 4.8 and later, some arches require -ltatomic to use atomic intrinsics
++    LIBS += -latomic
+ endif
+ 
+ ifeq ($(cfg), release)
